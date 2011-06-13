@@ -14,11 +14,9 @@ rctk.core = (function($) {
         setHandle: function(r) { handle = r; },
 
         run: function() {
-            var self=this;
             request("start", rctk.util.proxy(this.start, this));
         },
         start: function(sessionid, data) {
-            var self=this;
             sid = sessionid;
             if('title' in data) {
                 document.title = data.title;
@@ -29,7 +27,6 @@ rctk.core = (function($) {
             queue.push(task);
         },
         flush: function() {
-            var self=this;
             if(queue.length > 0) {
                 // show_throbber()
                 request("task", rctk.util.proxy(this.handle_tasks, this), sid, "queue="+JSON.stringify(queue));
