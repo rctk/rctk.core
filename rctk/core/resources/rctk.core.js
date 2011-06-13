@@ -3,25 +3,33 @@
 var rctk = rctk || {};
 
 rctk.core = (function($) {
-    var request = function(path, callback, sessionid, data) { alert("Request function not set -> " + path); };
-    var handle = function(task) { alert("Handle function not set -> " + task); };
+    var not_defined = function(msg) { alert(msg); };
+
+    var handlers = {
+        request: function(path, callback, sessionid, data) { 
+            not_defined("Request function not set -> " + path); 
+        },
+        handle: function(task) { 
+            not_defined("Handle function not set -> " + task); 
+        }
+    };
+
     var queue = [];
 
     return {
         sid: null,
 
-        setRequest: function(r) { request = r; },
-        setHandle: function(r) { handle = r; },
+        handlers: handlers,
 
         run: function() {
-            request("start", rctk.util.proxy(this.start, this));
+            handlers.request("start", rctk.util.proxy(this.start, this));
         },
         start: function(sessionid, data) {
             sid = sessionid;
             if('title' in data) {
                 document.title = data.title;
             }
-            request("pop", rctk.util.proxy(this.handle_tasks, this), sid);
+            handlers.request("pop", rctk.util.proxy(this.handle_tasks, this), sid);
         },
         push: function(task) {
             queue.push(task);
@@ -29,14 +37,14 @@ rctk.core = (function($) {
         flush: function() {
             if(queue.length > 0) {
                 // show_throbber()
-                request("task", rctk.util.proxy(this.handle_tasks, this), sid, "queue="+JSON.stringify(queue));
+                handlers.request("task", rctk.util.proxy(this.handle_tasks, this), sid, "queue="+JSON.stringify(queue));
                 queue = [];
             }
         },
         handle_tasks: function(sessionid, data) {
             if(data) {
                 for(var i=0; i < data.length; i++) {
-                    handle(data[i]);
+                    handlers.handle(data[i]);
                 }
             }
             this.flush(); 
