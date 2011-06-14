@@ -3,11 +3,15 @@
 var rctk = rctk || {};
 
 rctk.core = (function($) {
+    /*
+     * Private state 
+     */
     var not_defined = function(msg) { alert(msg); };
     var request_count = 0;
     var poll = false;
     var interval = 1000;
     var debug = false;
+    var crashed = false;
 
     var handlers = {
         request: function(path, callback, sessionid, data) { 
@@ -33,6 +37,12 @@ rctk.core = (function($) {
     };
 
     var queue = [];
+    var controls = {};
+    var widgets = {
+        var registry = {};
+        map: function(strclass) {
+        }
+    }
 
     return {
         sid: null,
@@ -101,6 +111,16 @@ rctk.core = (function($) {
             }
             
             this.flush(); 
+        },
+        handle_task: function(data) {
+            var control_class = widgets.map(data.control);
+            var parent = controls[data.parentid];
+            var id = data.id;
+
+            if(crashed) {
+                return;
+            }
+
         }
 
     };
