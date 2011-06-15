@@ -20,6 +20,9 @@ rctk.core = (function($) {
         handle: function(task) { 
             not_defined("Handle function not set -> " + task); 
         },
+        construct: function(class, parent, id) {
+            not_defined("Construct function not set");
+        },
         dump: function(data, debug) {
             // invoked to dump a debug stacktrace
             alert(data);
@@ -38,18 +41,15 @@ rctk.core = (function($) {
 
     var queue = [];
     var controls = {};
-    var widgets = {
-        registry: {},
-        map: function(strclass) {
-        }
-    }
+    var busy = [];
 
     return {
         sid: null,
 
         handlers: handlers,
 
-        run: function() {
+        run: function(root) {
+            controls[0] = root;
             handlers.request("start", rctk.util.proxy(this.start, this));
         },
         start: function(sessionid, data) {
@@ -87,7 +87,8 @@ rctk.core = (function($) {
         get_tasks: function() {
             request_count++;
             handlers.busy();
-            handlers.request("pop", rctk.util.proxy(this.handle_tasks, this), sid);
+            handlers.request("pop", 
+                             rctk.util.proxy(this.handle_tasks, this), sid);
         },
         push: function(task) {
             queue.push(task);
@@ -95,7 +96,9 @@ rctk.core = (function($) {
         flush: function() {
             if(queue.length > 0) {
                 handlers.busy();
-                handlers.request("task", rctk.util.proxy(this.handle_tasks, this), sid, "queue="+JSON.stringify(queue));
+                handlers.request("task", 
+                                 rctk.util.proxy(this.handle_tasks, this), 
+                                 sid, "queue="+JSON.stringify(queue));
                 queue = [];
             }
         },
@@ -106,23 +109,93 @@ rctk.core = (function($) {
             }
             if(data) {
                 for(var i=0; i < data.length; i++) {
-                    handlers.handle(data[i]);
+                    this.handle_task(data[i]);
                 }
             }
-            
+            // everything that was marked busy is no longer busy anymore
+            for(var i in busy) {
+                var c = busy[i];
+                rctk.util.log("Control no longer busy", c);
+                c.busy = false;
+            }
+
+            busy = [];
             this.flush(); 
         },
         handle_task: function(data) {
-            var control_class = widgets.map(data.control);
-            var parent = controls[data.parentid];
             var id = data.id;
 
             if(crashed) {
                 return;
             }
-
+            rctk.util.log("Action: " + data.action);
+            rctk.util.log(data);
+            switch(data.action) {
+            case "append":
+                var container = controls[id];
+                var child = controls[data.child];
+                container.append(child, data);
+                break;
+            case "remove":
+                var container = controls[id];
+                var child = controls[data.child];
+                container.remove(child, data);
+                break;
+            case "create":
+                var parent = controls[data.parentid];
+                c = handlers.construct(data.control, parent, id);
+                c.create(data);
+                controls[id] = c;
+                break;
+            case "destroy":
+                var control = controls[id];
+                control.destroy();
+                controls[id] = null;
+                break;
+            case "update":
+                var control = controls[id];
+                control.set_properties(data.update);
+                break;
+            case "call":
+                var control = controls[id];
+                var method = data.method;
+                var args = data.args || [];
+                control[method].apply(control, args);
+                control.set_properties(data.update);
+                break;
+            case "handler":
+                var control = controls[id];
+                control["handle_"+data.type] = true;
+                break;
+            case "layout":
+                var container = controls[id];
+                container.setLayout(data.type, data.config);
+                break;
+            case "relayout":
+                var container = controls[id];
+                rctk.util.log("relayout", container);
+                container.relayout(data.config);
+                break;
+            case "timer":
+                rctk.util.log("Handling timer " + id + ", " + data.milliseconds);
+                var self=this;
+                setTimeout(
+                  function() { 
+                      self.push({method:"event", type:"timer", id:id, data:{}});
+                      self.flush();
+                   }, data.milliseconds);
+                break;
+            
+            }
+        },
+        get_control: function(id) {
+            // used by, e.g., layout managers to lookup children
+            return controls[id];
+        },
+        register_busy: function(control) {
+            control.busy = true;
+            busy.push(control);
         }
-
     };
 
 })(jQuery);
