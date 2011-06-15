@@ -39,7 +39,7 @@ rctk.core = (function($) {
     var queue = [];
     var controls = {};
     var widgets = {
-        var registry = {};
+        registry: {},
         map: function(strclass) {
         }
     }
