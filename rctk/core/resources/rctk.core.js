@@ -2,7 +2,15 @@
 
 var rctk = rctk || {};
 
+/*
+ * We don't want a single, global monolithic object. In stead, create a
+ * function that can be constructed multiple times using 'new', so we can
+ * create multiple sessions in the same window. E.g. multiple applications
+ * running in their own rctk space
+ */
 rctk.core = (function($) {
+  // return a functions so we can create instances using new
+  return function() {
     /*
      * Private state 
      */
@@ -197,5 +205,5 @@ rctk.core = (function($) {
             busy.push(control);
         }
     };
-
+ }
 })(jQuery);
