@@ -25,10 +25,7 @@ rctk.core = (function($) {
         request: function(path, callback, sessionid, data) { 
             not_defined("Request function not set -> " + path); 
         },
-        handle: function(task) { 
-            not_defined("Handle function not set -> " + task); 
-        },
-        construct: function(class, parent, id) {
+        construct: function(klass, parent, id) {
             not_defined("Construct function not set");
         },
         dump: function(data, debug) {
@@ -75,7 +72,7 @@ rctk.core = (function($) {
                     if(config.polling) {
                         poll = true;
                         interval = config.polling;
-                        polltimer = setInterval(rctk.util.proxy(this.get_tasks, this), interval)
+                        polltimer = setInterval(rctk.util.proxy(this.get_tasks, this), interval);
                     }
                     else {
                         poll = false;
@@ -132,20 +129,21 @@ rctk.core = (function($) {
         },
         handle_task: function(data) {
             var id = data.id;
+            var control = controls[id];
 
             if(crashed) {
                 return;
             }
-            rctk.util.log("Action: " + data.action);
-            rctk.util.log(data);
+            rctk.util.log("handle_task: ", data);
+
             switch(data.action) {
             case "append":
-                var container = controls[id];
+                var container = control;
                 var child = controls[data.child];
                 container.append(child, data);
                 break;
             case "remove":
-                var container = controls[id];
+                var container = control;
                 var child = controls[data.child];
                 container.remove(child, data);
                 break;
@@ -156,31 +154,28 @@ rctk.core = (function($) {
                 controls[id] = c;
                 break;
             case "destroy":
-                var control = controls[id];
                 control.destroy();
                 controls[id] = null;
                 break;
             case "update":
-                var control = controls[id];
                 control.set_properties(data.update);
                 break;
             case "call":
-                var control = controls[id];
                 var method = data.method;
                 var args = data.args || [];
                 control[method].apply(control, args);
                 control.set_properties(data.update);
                 break;
             case "handler":
-                var control = controls[id];
-                control["handle_"+data.type] = true;
+                control.handle(data.type);
+                // control["handle_"+data.type] = true;
                 break;
             case "layout":
-                var container = controls[id];
+                var container = control;
                 container.setLayout(data.type, data.config);
                 break;
             case "relayout":
-                var container = controls[id];
+                var container = control;
                 rctk.util.log("relayout", container);
                 container.relayout(data.config);
                 break;
