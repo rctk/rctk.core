@@ -1,4 +1,5 @@
 // http://www.adequatelygood.com/2010/3/JavaScript-Module-Pattern-In-Depth
+/*jslint forin: true */
 
 var rctk = rctk || {};
 
@@ -100,6 +101,7 @@ rctk.core = (function($) {
         },
         flush: function() {
             if(queue.length > 0) {
+                request_count++;
                 handlers.busy();
                 handlers.request("task", 
                                  rctk.util.proxy(this.handle_tasks, this), 
