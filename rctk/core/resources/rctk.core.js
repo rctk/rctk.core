@@ -152,8 +152,10 @@ rctk.core = (function($) {
             case "create":
                 var parent = controls[data.parentid];
                 c = handlers.construct(data.control, parent, id);
-                c.create(data);
-                controls[id] = c;
+                if(c !== undefined) {
+                    c.create(data);
+                    controls[id] = c;
+                }
                 break;
             case "destroy":
                 control.destroy();
