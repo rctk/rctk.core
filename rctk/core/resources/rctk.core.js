@@ -109,9 +109,15 @@ rctk.core = (function($) {
                              rctk.util.proxy(this.handle_tasks, this), sid);
         },
         push: function(task) {
+            if(crashed) {
+                return;
+            }
             queue.push(task);
         },
         flush: function() {
+            if(crashed) {
+                return;
+            }
             if(queue.length > 0) {
                 request_count++;
                 handlers.busy();
