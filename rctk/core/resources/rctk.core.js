@@ -29,9 +29,20 @@ rctk.core = (function($) {
         construct: function(klass, parent, id) {
             not_defined("Construct function not set");
         },
-        dump: function(data, debug) {
-            // invoked to dump a debug stacktrace
-            alert(data);
+        crash: function(data, debug) {
+            var w = $(window).width();
+            var h = $(window).height();
+
+            var dialog_w = Math.max(100, w-100);
+            var dialog_h = Math.max(100, h-100);
+
+            $("body").append('<div id="system_dialog" style="position: fixed; top: 50px; left: 50px; width: ' + dialog_w + 'px; height: ' + dialog_h + 'px"><b>The application ' + data.application + ' has crashed. </b><br><p>Click <a href="/">here</a> to restart</p><br><div id="system_traceback"></div></div>');
+
+            if(debug) {
+            $("#system_traceback").html('<div style="overflow: auto; width: ' + dialog_w + 'px; height: ' + (dialog_h-100) + 'px">' + data.traceback + '</div>');
+            }
+            return;
+            
         },
         busy: function() {
             // invoked when we're waiting for data
@@ -63,7 +74,8 @@ rctk.core = (function($) {
             if(jQuery.isArray(data) && 'crash' in data[0] && data[0].crash) {
               // pass true for debug, since we've never actually received
               // a configuration
-              handlers.dump(data[0], true);
+              handlers.crash(data[0], true);
+              crashed = true;
               return;
             }
             if('config' in data) {
@@ -133,6 +145,10 @@ rctk.core = (function($) {
             var id = data.id;
             var control = controls[id];
 
+            if("crash" in data && data.crash) {
+                handlers.crash(data, debug);
+                crashed = true;
+            }
             if(crashed) {
                 return;
             }

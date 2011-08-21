@@ -1,0 +1,6 @@
+#system_dialog {
+    position: fixed;
+    background-color: #eee;
+    border: 1px solid black;
+    z-index: 3000;
+}
