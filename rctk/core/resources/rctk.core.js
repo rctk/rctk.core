@@ -194,7 +194,6 @@ rctk.core = (function($) {
                 break;
             case "handler":
                 control.handle(data.type);
-                // control["handle_"+data.type] = true;
                 break;
             case "layout":
                 var container = control;
